@@ -1,20 +1,27 @@
+from mysql.connector import connect, Error
+
+
 class DBLink:
-	def __init__(self, login: str, password: str, address: str):
-		self.__login = login
+	def __init__(self, host: str, user: str, password: str):
+		self.__host = host
+		self.__user = user
 		self.__password = password
-		self.__address = address
+		self.__database = "waffle_management"
 
-	def open_connection(self) -> bool:
-		pass
+	def db_request_data(self, request) -> list:
+		result: list
+		with connect(host=self.__host, user=self.__user, password=self.__password) as connection:
+			with connection.cursor() as cursor:
+				cursor.execute(request)
+				result = cursor.fetchall()
+		return result
 
-	def check_connection(self) -> bool:
-		pass
+	def db_save_log(self, log, user_id):
 
-	def select_from_db(self, request) -> dict:
-		pass
+		db_request = (
+			f"INSERT INTO log (log_initiator_id, log_message, time) "
+			f"VALUES ({user_id}, \"{log}\", NOW())")
+		with connect(host=self.__host, user=self.__user, password=self.__password) as connection:
+			with connection.cursor() as cursor:
+				cursor.execute(db_request)
 
-	def insert_into_db(self, request) -> bool:
-		pass
-
-	def close_connection(self) -> bool:
-		pass

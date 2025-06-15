@@ -4,23 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fef39d01-99c6-423c-9d5a-d42bb4b56ebe" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/Waffle_Wizard.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/UI.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/dbmodule.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/ovenmodel.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/plcmodule.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/thermalfunctions.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/wafflemodel.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/weighted_distribution.py" afterDir="false" />
+    <list default="true" id="fef39d01-99c6-423c-9d5a-d42bb4b56ebe" name="Changes" comment="Waffle wizard unfinished version 0.0.1">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/UI.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/UI.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/dbmodule.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/dbmodule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/plcmodule.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/plcmodule.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,6 +25,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;HalfPunch&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/HalfPunch/Waffle-Wizard.git&quot;,
+    &quot;accountId&quot;: &quot;ff90f864-4c5d-4714-8b08-a45503c82cb6&quot;
+  }
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8
 }</component>
@@ -146,6 +146,19 @@
       <option name="presentableId" value="Default" />
       <updated>1747403258514</updated>
     </task>
+    <task id="LOCAL-00001" summary="Waffle wizard unfinished version 0.0.1">
+      <option name="closed" value="true" />
+      <created>1749929609547</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1749929609547</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Waffle wizard unfinished version 0.0.1" />
+    <option name="LAST_COMMIT_MESSAGE" value="Waffle wizard unfinished version 0.0.1" />
   </component>
 </project>
