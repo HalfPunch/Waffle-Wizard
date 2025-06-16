@@ -1,6 +1,9 @@
 import hashlib
 from tkinter import *
 from tkinter import ttk
+from source.ovenmodel import Oven, OvenPlate
+from source.wafflemodel import Waffle
+import source.weighted_distribution as wd
 from source.dbmodule import DBLink
 from source.plcmodule import PLCLink
 from mysql.connector import Error
@@ -11,8 +14,8 @@ TEXT_FONT = ("Arial", 12)
 
 class UserInterface:
 	def __init__(self):
-
 		self.__main_window = Tk()
+		self.__is_plc_update_running = False
 		self.__db_connector = DBLink("localhost", "admin", "admin")
 		self.__plc_connector = PLCLink("192.168.1.9")
 		self.__main_window.title("Waffle Wizard")
@@ -96,6 +99,20 @@ class UserInterface:
 			frame_var_list[master_frame_id]["frame"].grid(row=0, column=master_frame_id, padx=5)
 		return frame_var_list
 
+	def __update_plc_monitor(self):
+		if self.__is_plc_update_running:
+			temperature_tuple = self.__plc_connector.get_temperature()
+			time_str = (
+					self.__plc_connector.get_current_baking_time() + "/" +
+					self.__plc_connector.get_config_baking_time())
+			for temp_pair_id in range(4):
+				self.__ui_elements["process_grid_frame_var_list"][temp_pair_id]["upper_temp_label"].configure(
+					text=temperature_tuple[temp_pair_id][0])
+				self.__ui_elements["process_grid_frame_var_list"][temp_pair_id]["lower_temp_label"].configure(
+					text=temperature_tuple[temp_pair_id][1])
+				self.__ui_elements["baking_time_label"].configure(text=time_str)
+			self.__main_window.after(1000, self.__update_plc_monitor)
+
 	def __init_process_tab(self):
 		self.__notebook_pages["process"] = ttk.Frame(self.__notebook)
 		self.__notebook_pages["process"].pack(fill=BOTH, expand=True)
@@ -112,8 +129,105 @@ class UserInterface:
 		self.__ui_elements["baking_time_label"].place(
 			relx=0.5, rely=0.5, anchor="center", y=-100)
 
-	def __get_ingredients_from(self, db):
-		pass
+		self.__is_plc_update_running = True
+		self.__update_plc_monitor()
+
+	def __get_ingredient_name_list(self):
+		ingredient_list = [
+			("Мука,высший_сорт"), ("Сахар,белый"), ("Молоко"), ("Соль"), ("Сода"), ("Лимонная_кислота"), ("Яйцо")]
+		# ingredient_list = self.__db_connector.db_request_data("SELECT name FROM ingredient")
+		return ingredient_list
+
+	def __button_logic_add_ingredient(self):
+		try:
+			selected_item_index = self.__ui_elements["recipe_ingredient_add_list"].selection()[0]
+			item_mass = float(self.__ui_elements["recipe_mass_entry"].get())
+			if item_mass < 1.0:
+				raise ValueError
+			self.__ui_elements["recipe_current_ingredient_list"].insert("", END, values=(
+				self.__ui_elements["recipe_ingredient_add_list"].item(selected_item_index)["values"][0], item_mass))
+			self.__ui_elements["recipe_ingredient_add_list"].delete(selected_item_index)
+		except IndexError:
+			pass
+		except ValueError:
+			pass
+
+	def __button_logic_remove_ingredient(self):
+		try:
+			selected_item_index = self.__ui_elements["recipe_current_ingredient_list"].selection()[0]
+			self.__ui_elements["recipe_ingredient_add_list"].insert("", END, values=(
+				self.__ui_elements["recipe_current_ingredient_list"].item(selected_item_index)["values"][0]))
+			self.__ui_elements["recipe_current_ingredient_list"].delete(selected_item_index)
+		except IndexError:
+			pass
+
+	def __button_logic_new_configuration(self) -> bool:
+		table = self.__ui_elements["recipe_current_ingredient_list"]
+		ingredient_names = []
+		ingredient_mass = []
+		try:
+			gap = float(self.__ui_elements["config_gap"].get()) / 1000
+		except ValueError:
+			return False
+		if not table.get_children():
+			return False
+		resulting_attributes = (100, 3000, 0.56)
+		'''
+		for line in table.get_children():
+			ingredient_names.append("\"" + table.item(line)['values'][0] + "\"")
+			ingredient_mass.append(table.item(line)['values'][1])
+		db_attribute_data = self.__db_connector.db_request_data(
+			f"SELECT density, temperature_capacity, temperature_conductivity FROM ingredient"
+			f"WHERE name IN ({str.join(', ', ingredient_names)})")
+		wd_attribute_data = zip(*db_attribute_data)
+		resulting_attributes = wd.weighted_distribution(ingredient_mass, wd_attribute_data)
+		'''
+		new_waffle = Waffle(
+				thickness=gap,
+				volume=0.002,
+				temperature_capacity=resulting_attributes[1],
+				temperature_conductivity=resulting_attributes[2],
+				layer_count=5,
+				humidity=0.56,
+				default_temperature=20,
+				mass=resulting_attributes[0]/1000
+			)
+		new_oven = Oven(
+			OvenPlate(
+				area=1,
+				thickness=0.02,
+				density=7200,
+				t_conductivity=50,
+				t_capacity=500,
+				temperature=200
+			),
+			OvenPlate(
+				area=1,
+				thickness=0.02,
+				density=7200,
+				t_conductivity=50,
+				t_capacity=500,
+				temperature=200
+			),
+			new_waffle,
+			True,
+			True)
+		new_oven.bake_until_ready()
+		self.__ui_elements["config_temperature"].delete(0, "end")
+		self.__ui_elements["config_temperature"].configure(state="normal")
+		self.__ui_elements["config_temperature"].insert(0, "200")
+		self.__ui_elements["config_time"].delete(0, "end")
+		self.__ui_elements["config_time"].configure(state="normal")
+		self.__ui_elements["config_time"].insert(0, f"{new_oven.get_time()}")
+
+	def __button_logic_upload_configuration(self):
+		try:
+			self.__plc_connector.upload_config(
+				int(self.__ui_elements["config_gap"].get()),
+				int(self.__ui_elements["config_temperature"].get()),
+				int(self.__ui_elements["config_time"].get()))
+		except ValueError:
+			pass
 
 	def __init_recipe_tab(self):
 		self.__notebook_pages["recipe"] = ttk.Frame(self.__notebook)
@@ -130,7 +244,7 @@ class UserInterface:
 			self.__ui_elements["recipe_ingredient_grid"], columns="name", show="headings")
 		self.__ui_elements["recipe_ingredient_add_list"].grid(row=0, column=0, padx=20, rowspan=2)
 		self.__ui_elements["recipe_ingredient_add_list"].heading("name", text="Ингредиент")
-		for ingredient in (r"Мука,высший_сорт", r"Сахар,белый", "Молоко", "Яйцо", "Сода", "Соль"):
+		for ingredient in self.__get_ingredient_name_list():
 			self.__ui_elements["recipe_ingredient_add_list"].insert("", END, values=ingredient)
 
 		self.__ui_elements["recipe_current_ingredient_list"] = ttk.Treeview(
@@ -144,11 +258,13 @@ class UserInterface:
 		self.__ui_elements["recipe_mass_entry"].grid(row=0, column=1, padx=5, pady=5, sticky=SE)
 
 		self.__ui_elements["recipe_add_button"] = Button(
-			self.__ui_elements["recipe_ingredient_grid"], text="+", font=TEXT_FONT, height=1, width=2)
+			self.__ui_elements["recipe_ingredient_grid"], text="+", font=TEXT_FONT, height=1, width=2,
+			command=self.__button_logic_add_ingredient)
 		self.__ui_elements["recipe_add_button"].grid(row=0, column=2, padx=5, pady=5, sticky=SW)
 
 		self.__ui_elements["recipe_remove_button"] = Button(
-			self.__ui_elements["recipe_ingredient_grid"], text="-", font=TEXT_FONT, height=1, width=2)
+			self.__ui_elements["recipe_ingredient_grid"], text="-", font=TEXT_FONT, height=1, width=2,
+			command=self.__button_logic_remove_ingredient)
 		self.__ui_elements["recipe_remove_button"].grid(row=1, column=1, columnspan=2, pady=5, sticky=N)
 
 		self.__ui_elements["recipe_config_grid"] = ttk.Frame(self.__ui_elements["recipe_grid"])
@@ -172,13 +288,16 @@ class UserInterface:
 		self.__ui_elements["config_time"].grid(row=1, column=4, columnspan=2, padx=10, pady=10)
 
 		self.__ui_elements["config_new_config_button"] = Button(
-			self.__ui_elements["recipe_config_grid"], text="Подготовить конфигурацию")
+			self.__ui_elements["recipe_config_grid"], text="Подготовить конфигурацию",
+			command=self.__button_logic_new_configuration)
 		self.__ui_elements["config_new_config_button"].grid(row=2, column=0, columnspan=3, padx=10, pady=10)
 		self.__ui_elements["config_load_config_button"] = Button(
-			self.__ui_elements["recipe_config_grid"], text="Загрузить конфигурацию", state="disabled")
+			self.__ui_elements["recipe_config_grid"], text="Загрузить конфигурацию", state="disabled",
+			command=self.__button_logic_upload_configuration)
 		self.__ui_elements["config_load_config_button"].grid(row=2, column=3, columnspan=3, padx=10, pady=10)
 
 	def __destroy_secured_tabs(self):
+		self.__is_plc_update_running = False
 		self.__notebook_pages["process"].destroy()
 		del self.__notebook_pages["process"]
 		self.__notebook_pages["recipe"].destroy()
@@ -197,9 +316,12 @@ class UserInterface:
 			return -1
 
 	def __button_logic_login_confirmation(self):
+		login_id = 1
+		'''
 		login_id = self.__check_login(
 			self.__ui_elements["login_entry"].get(),
 			self.__ui_elements["password_entry"].get())
+		'''
 		if login_id != -1:
 			if "process" not in self.__notebook_pages:
 				self.__init_process_tab()
@@ -213,6 +335,7 @@ class UserInterface:
 			self.__ui_elements["login_error_label"].configure(text="incorrect login or password")
 
 	def __button_logic_logout_button(self):
+		login_id = -1
 		self.__ui_elements["login_confirmation_button"].configure(state="normal")
 		self.__ui_elements["login_entry"].configure(state="normal")
 		self.__ui_elements["password_entry"].configure(state="normal")
