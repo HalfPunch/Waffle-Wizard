@@ -1,5 +1,3 @@
-from typing import Union
-
 
 def weighted_distribution(weights: list, attribute_lists: list) -> list:
 	"""

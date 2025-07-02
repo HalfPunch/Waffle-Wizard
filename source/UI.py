@@ -219,6 +219,7 @@ class UserInterface:
 		self.__ui_elements["config_time"].delete(0, "end")
 		self.__ui_elements["config_time"].configure(state="normal")
 		self.__ui_elements["config_time"].insert(0, f"{new_oven.get_time()}")
+		self.__ui_elements["config_load_config_button"].configure(state="normal")
 
 	def __button_logic_upload_configuration(self):
 		try:
@@ -316,7 +317,7 @@ class UserInterface:
 			return -1
 
 	def __button_logic_login_confirmation(self):
-		login_id = 1
+		login_id = -1
 		'''
 		login_id = self.__check_login(
 			self.__ui_elements["login_entry"].get(),
